@@ -44,6 +44,9 @@ codex mcp add eu-climate -- uvx eu-climate-policy-mcp
 uv run eu-climate series emissions --country DE --sector total \
   --accounting-scope without_lulucf --start-year 1990
 
+uv run eu-climate sectors search transport
+uv run eu-climate series emissions --country HU --sector 1.A.3 --start-year 1990
+
 uv run eu-climate measures list --country Hungary --status Implemented --sector Transport
 uv run eu-climate measures get --country Hungary --measure-id 4
 
@@ -83,7 +86,11 @@ a real-time emissions figure.
 
 The `get_emissions_series` MCP tool and `series emissions` CLI command resolve the
 appropriate inventory variable and sort results client-side because upstream rejects
-`ORDER BY` on some `ghg_value` queries.
+`ORDER BY` on some `ghg_value` queries. `sector` accepts `total` or an IPCC sector
+code at any depth (`1`, `1.A`, `1.A.3`); discover codes with
+`search_emission_sectors`/`describe_emission_sector` (`sectors search|describe`).
+Parent sectors already include their children — never sum a sector with its parent
+or children.
 
 The `list_measures`/`get_measure` tools (`measures list|get` CLI) expose the Policies
 and Measures database as a searchable descriptive catalogue. Structured ex-ante and

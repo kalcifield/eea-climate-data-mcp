@@ -100,6 +100,55 @@ def test_emissions_series_rejects_bad_scope(metadata_fixture: list[dict[str, Any
         raise AssertionError("expected ValueError")
 
 
+class SectorFakeProvider(FakeProvider):
+    def query(
+        self, sql: str, page: int, page_size: int, timeout: float | None = None
+    ) -> list[dict[str, Any]]:
+        self.calls.append((sql, page, page_size, timeout))
+        if "ghg_variable" in sql and "DISTINCT" in sql:
+            return [
+                {"sector_number": "1.A.3", "navigation": "1.A.3. Transport", "sector": "1. Energy"},
+                {
+                    "sector_number": "1.A.3.b",
+                    "navigation": "1.A.3.b. Road Transportation",
+                    "sector": "1. Energy",
+                },
+                {"sector_number": "Sectors/Totals", "navigation": "Sectors/Totals", "sector": None},
+            ]
+        if "ghg_variable" in sql:
+            return [
+                {
+                    "variable_uid": "uid-transport",
+                    "variable_name": "[1.A.3. Transport][Fuels][Emissions][Aggregate GHGs]",
+                    "unit": "kt CO₂ equivalent",
+                    "classification": "Fuels",
+                    "navigation": "1.A.3. Transport",
+                    "is_template": False,
+                    "is_country_specific": False,
+                }
+            ]
+        return [{"inventory_year": 2024, "value": 14016.2}]
+
+
+def test_subsector_series_resolves_transport(metadata_fixture: list[dict[str, Any]]) -> None:
+    service = ClimatePolicyService(provider=SectorFakeProvider(metadata_fixture))
+    result = service.get_emissions_series("HU", sector="1.A.3")
+    assert result.variable_uid == "uid-transport"
+    assert any("double counting" in w for w in result.provenance.warnings)
+
+
+def test_sector_search_and_describe(metadata_fixture: list[dict[str, Any]]) -> None:
+    service = ClimatePolicyService(provider=SectorFakeProvider(metadata_fixture))
+    found = service.search_emission_sectors("transport")
+    codes = {s["sector_code"]: s for s in found["sectors"]}
+    assert set(codes) == {"1.A.3", "1.A.3.b"}
+    assert codes["1.A.3.b"]["parent"] == "1.A.3"
+    assert codes["1.A.3.b"]["level"] == 4
+    described = service.describe_emission_sector("1.A.3")
+    assert described["children"] == ["1.A.3.b"]
+    assert any("double counting" in c for c in described["caveats"])
+
+
 class PamsFakeProvider(FakeProvider):
     def query(
         self, sql: str, page: int, page_size: int, timeout: float | None = None

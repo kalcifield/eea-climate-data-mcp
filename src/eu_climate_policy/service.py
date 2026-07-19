@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
 from typing import Any, Protocol, cast
 
@@ -213,6 +214,62 @@ class ClimatePolicyService:
         sql = f"SELECT DISTINCT TOP {max_rows} [{column}] FROM [{database}].[{version}].[{table}]"
         return self.query_sql(sql, max_rows=max_rows, page_size=max_rows)
 
+    def search_emission_sectors(self, query: str, max_rows: int = 50) -> dict[str, Any]:
+        escaped = query.replace("'", "''")
+        sql = (
+            "SELECT DISTINCT r.sector_number, r.navigation, r.sector "
+            "FROM [GHG_Inventory].[latest].[ghg_variable] AS r "
+            f"WHERE (r.sector_number LIKE '{escaped}%' OR r.navigation LIKE '%{escaped}%') "
+            "AND r.sector_number IS NOT NULL"
+        )
+        result = self.query_sql(sql, max_rows=500, page_size=500)
+        by_code: dict[str, dict[str, Any]] = {}
+        for row in result.results:
+            code = str(row.get("sector_number") or "").strip()
+            if not code or code == "Sectors/Totals":
+                continue
+            navigation = str(row.get("navigation") or "")
+            entry = by_code.setdefault(
+                code,
+                {
+                    "sector_code": code,
+                    "name": navigation,
+                    "ipcc_sector": row.get("sector"),
+                    "level": len(code.split(".")),
+                    "parent": ".".join(code.split(".")[:-1]) or None,
+                },
+            )
+            # prefer the navigation label that spells out the code itself
+            if navigation.startswith(f"{code}."):
+                entry["name"] = navigation
+        sectors = sorted(by_code.values(), key=lambda e: str(e["sector_code"]))[:max_rows]
+        return {
+            "query": query,
+            "sectors": sectors,
+            "provenance": result.provenance.model_dump(mode="json"),
+        }
+
+    def describe_emission_sector(self, sector_code: str) -> dict[str, Any]:
+        code = sector_code.strip()
+        found = self.search_emission_sectors(code, max_rows=500)
+        entries = {e["sector_code"]: e for e in found["sectors"]}
+        entry = entries.get(code)
+        if entry is None:
+            raise NotFoundError(f"Unknown emission sector code: {code}")
+        depth = len(code.split("."))
+        children = sorted(
+            c for c in entries if c.startswith(f"{code}.") and len(c.split(".")) == depth + 1
+        )
+        return {
+            **entry,
+            "children": children,
+            "caveats": [
+                "Parent sectors already include their children; never sum a sector "
+                "with its parent or children (double counting)."
+            ],
+            "provenance": found["provenance"],
+        }
+
     def get_emissions_series(
         self,
         country: str,
@@ -228,9 +285,13 @@ class ClimatePolicyService:
         }.get(accounting_scope)
         if scope_parameter is None:
             raise ValueError("accounting_scope must be 'with_lulucf' or 'without_lulucf'")
-        sector_key = sector.strip().lower()
-        if sector_key != "total" and sector_key not in {"1", "2", "3", "4", "5", "6"}:
-            raise ValueError("sector must be 'total' or an IPCC sector number '1'..'6'")
+        sector_key = sector.strip()
+        if sector_key.lower() == "total":
+            sector_key = "total"
+        elif not re.fullmatch(r"\d(\.[\w()]+)*", sector_key):
+            raise ValueError(
+                "sector must be 'total' or an IPCC sector code such as '1', '1.A', '1.A.3'"
+            )
 
         def quoted(text: str) -> str:
             return "'" + text.replace("'", "''") + "'"
@@ -246,12 +307,13 @@ class ClimatePolicyService:
         )
         candidates = self.query_sql(variable_sql, max_rows=50, page_size=50).results
         if sector_key != "total":
-            # plain sector aggregate only: skip memo items, templates, and HWP approach variants
+            # plain sector aggregate only: skip memo items, templates, and HWP approach
+            # variants; no classification filter because subsectors carry their own
+            # classification labels (e.g. 'Fuels' on 1.A.3)
             candidates = [
                 c
                 for c in candidates
-                if c.get("classification") == "no classification"
-                and not c.get("is_template")
+                if not c.get("is_template")
                 and not c.get("is_country_specific")
                 and str(c.get("navigation", "")).startswith(f"{sector_key}.")
             ]
@@ -299,6 +361,10 @@ class ClimatePolicyService:
             provenance.warnings.append(
                 "accounting_scope applies only to sector='total'; "
                 "sector series are the reported sector aggregates."
+            )
+            provenance.warnings.append(
+                f"Values cover sector {sector_key} only; do not sum with parent or "
+                "child sector series (double counting)."
             )
         return EmissionsSeriesResult(
             country=country,

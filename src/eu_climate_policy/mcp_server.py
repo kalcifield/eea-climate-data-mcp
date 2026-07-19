@@ -53,6 +53,24 @@ def build_server() -> FastMCP:
         return result.model_dump(mode="json")
 
     @mcp.tool()
+    def search_emission_sectors(query: str, max_rows: int = 50) -> dict[str, Any]:
+        """Find IPCC inventory sector codes by code prefix or name substring.
+
+        Returns sector_code, name, hierarchy level, and parent for each match,
+        e.g. query 'transport' -> 1.A.3 and its subsectors.
+        """
+        return svc.search_emission_sectors(query, max_rows)
+
+    @mcp.tool()
+    def describe_emission_sector(sector_code: str) -> dict[str, Any]:
+        """Describe one IPCC sector code: name, level, parent, direct children.
+
+        Parents already include children; never sum a sector with its parent or
+        children (double counting).
+        """
+        return svc.describe_emission_sector(sector_code)
+
+    @mcp.tool()
     def get_emissions_series(
         country: str,
         sector: str = "total",
@@ -64,10 +82,11 @@ def build_server() -> FastMCP:
         """Curated national GHG inventory time series with the statistically correct variable.
 
         country: ISO-style Discodata country code, e.g. 'HU', 'AT', 'EUA'.
-        sector: 'total' or an IPCC sector number '1'..'6' (1 Energy, 2 IPPU,
-        3 Agriculture, 4 LULUCF, 5 Waste, 6 Other).
-        accounting_scope: 'with_lulucf' or 'without_lulucf' (totals only).
-        Avoids TREND/BASE_YEAR_AVG/PREV_SUBMISSION variants; sorted client-side by year.
+        sector: 'total' or an IPCC sector code at any depth: '1', '1.A', '1.A.3'
+        (discover codes via search_emission_sectors). Never sum a sector with its
+        parent or children. accounting_scope: 'with_lulucf' or 'without_lulucf'
+        (totals only). Avoids TREND/BASE_YEAR_AVG/PREV_SUBMISSION variants;
+        sorted client-side by year.
         """
         result = svc.get_emissions_series(
             country, sector, gas, accounting_scope, start_year, end_year

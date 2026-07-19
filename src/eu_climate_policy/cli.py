@@ -25,12 +25,14 @@ values_app = typer.Typer(no_args_is_help=True)
 sql_app = typer.Typer(no_args_is_help=True)
 series_app = typer.Typer(no_args_is_help=True)
 measures_app = typer.Typer(no_args_is_help=True)
+sectors_app = typer.Typer(no_args_is_help=True)
 app.add_typer(databases_app, name="databases")
 app.add_typer(tables_app, name="tables")
 app.add_typer(values_app, name="values")
 app.add_typer(sql_app, name="sql")
 app.add_typer(series_app, name="series")
 app.add_typer(measures_app, name="measures")
+app.add_typer(sectors_app, name="sectors")
 
 
 def run(operation: Callable[[], T]) -> T:
@@ -200,6 +202,18 @@ def series_emissions(
         ),
         format,
     )
+
+
+@sectors_app.command("search")
+def sectors_search(
+    query: str, max_rows: int = 50, format: OutputFormat = OutputFormat.json
+) -> None:
+    emit(run(lambda: create_service().search_emission_sectors(query, max_rows)), format)
+
+
+@sectors_app.command("describe")
+def sectors_describe(sector_code: str, format: OutputFormat = OutputFormat.json) -> None:
+    emit(run(lambda: create_service().describe_emission_sector(sector_code)), format)
 
 
 @measures_app.command("list")
