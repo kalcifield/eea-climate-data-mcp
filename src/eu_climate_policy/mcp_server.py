@@ -75,6 +75,48 @@ def build_server() -> FastMCP:
         return result.model_dump(mode="json")
 
     @mcp.tool()
+    def list_measures(
+        country: str | None = None,
+        status: str | None = None,
+        sector: str | None = None,
+        instrument_type: str | None = None,
+        start_year: int | None = None,
+        necp_reference: str | None = None,
+        responsible_entity: str | None = None,
+        free_text: str | None = None,
+        max_rows: int = 100,
+    ) -> dict[str, Any]:
+        """Search the Policies and Measures catalogue (descriptive, not a ranking source).
+
+        country: PaMs country label, e.g. 'Hungary', 'Germany'. status: e.g.
+        'Implemented', 'Planned', 'Adopted', 'Expired'. sector/instrument_type/
+        responsible_entity/free_text are substring matches. Quantified effect
+        fields are sparse; missing values mean not reported, not zero.
+        """
+        result = svc.list_measures(
+            country,
+            status,
+            sector,
+            instrument_type,
+            start_year,
+            necp_reference,
+            responsible_entity,
+            free_text,
+            max_rows,
+        )
+        return result.model_dump(mode="json")
+
+    @mcp.tool()
+    def get_measure(country: str, measure_id: int) -> dict[str, Any]:
+        """Fetch one policy or measure with explicit quantification semantics.
+
+        Returns the full record plus a quantification block: status is
+        'reported' or 'not_reported'; ex-ante values by scope (total/esr/
+        eu_ets/lulucf) and target year, ex-post average if reported.
+        """
+        return svc.get_measure(country, measure_id)
+
+    @mcp.tool()
     def get_sql_capabilities() -> dict[str, Any]:
         """Return the documented and live-tested Discodata SQL capability matrix."""
         return svc.get_sql_capabilities()

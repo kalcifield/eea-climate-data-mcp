@@ -44,6 +44,9 @@ codex mcp add eu-climate -- uvx eu-climate-policy-mcp
 uv run eu-climate series emissions --country DE --sector total \
   --accounting-scope without_lulucf --start-year 1990
 
+uv run eu-climate measures list --country Hungary --status Implemented --sector Transport
+uv run eu-climate measures get --country Hungary --measure-id 4
+
 uv run eu-climate tables describe \
   --database GHG_Inventory --version latest --table ghg_value
 
@@ -80,7 +83,14 @@ a real-time emissions figure.
 
 The `get_emissions_series` MCP tool and `series emissions` CLI command resolve the
 appropriate inventory variable and sort results client-side because upstream rejects
-`ORDER BY` on some `ghg_value` queries. Every result includes a query hash, retrieval
+`ORDER BY` on some `ghg_value` queries.
+
+The `list_measures`/`get_measure` tools (`measures list|get` CLI) expose the Policies
+and Measures database as a searchable descriptive catalogue. Structured ex-ante and
+ex-post effect values are sparse (several countries, including Hungary, report none),
+so `get_measure` returns explicit quantification semantics — `reported` vs
+`not_reported` — and missing values must not be read as zero impact. The catalogue is
+deliberately not a ranking or impact-estimation source. Every result includes a query hash, retrieval
 time, table references, reporting status, source links, and warnings.
 
 Machine-readable output goes to stdout and diagnostics to stderr. Exit codes:

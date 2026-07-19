@@ -100,6 +100,46 @@ def test_emissions_series_rejects_bad_scope(metadata_fixture: list[dict[str, Any
         raise AssertionError("expected ValueError")
 
 
+class PamsFakeProvider(FakeProvider):
+    def query(
+        self, sql: str, page: int, page_size: int, timeout: float | None = None
+    ) -> list[dict[str, Any]]:
+        self.calls.append((sql, page, page_size, timeout))
+        return [
+            {
+                "Country": "Hungary",
+                "ID_of_policy_or_measure": 4,
+                "Name_of_policy_or_measure": "Renovation strategy",
+                "Status_of_implementation": "Implemented",
+                "Total_GHG_emissions_reductions_in_2030__kt_CO2eq_y_GHG": None,
+                "Average_expost_emission_reduction__kt_CO2eq_y_GHG": None,
+            }
+        ]
+
+
+def test_list_measures_builds_filters(metadata_fixture: list[dict[str, Any]]) -> None:
+    provider = PamsFakeProvider(metadata_fixture)
+    service = ClimatePolicyService(provider=provider)
+    result = service.list_measures(country="Hungary", status="Implemented", sector="Transport")
+    sql = provider.calls[0][0]
+    assert "p.Country = 'Hungary'" in sql
+    assert "p.Status_of_implementation = 'Implemented'" in sql
+    assert "LIKE '%Transport%'" in sql
+    assert any("not reported" in w for w in result.provenance.warnings)
+
+
+def test_get_measure_flags_unreported_quantification(
+    metadata_fixture: list[dict[str, Any]],
+) -> None:
+    service = ClimatePolicyService(provider=PamsFakeProvider(metadata_fixture))
+    result = service.get_measure("Hungary", 4)
+    quant = result["quantification"]
+    assert quant["quantification_available"] is False
+    assert quant["quantification_status"] == "not_reported"
+    assert "not zero impact" in quant["warning"]
+    assert result["measure"]["Name_of_policy_or_measure"] == "Renovation strategy"
+
+
 def test_distinct_validates_column(metadata_fixture: list[dict[str, Any]]) -> None:
     service = ClimatePolicyService(provider=FakeProvider(metadata_fixture))
     try:

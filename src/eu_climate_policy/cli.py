@@ -24,11 +24,13 @@ tables_app = typer.Typer(no_args_is_help=True)
 values_app = typer.Typer(no_args_is_help=True)
 sql_app = typer.Typer(no_args_is_help=True)
 series_app = typer.Typer(no_args_is_help=True)
+measures_app = typer.Typer(no_args_is_help=True)
 app.add_typer(databases_app, name="databases")
 app.add_typer(tables_app, name="tables")
 app.add_typer(values_app, name="values")
 app.add_typer(sql_app, name="sql")
 app.add_typer(series_app, name="series")
+app.add_typer(measures_app, name="measures")
 
 
 def run(operation: Callable[[], T]) -> T:
@@ -198,6 +200,46 @@ def series_emissions(
         ),
         format,
     )
+
+
+@measures_app.command("list")
+def measures_list(
+    country: str | None = None,
+    status: str | None = None,
+    sector: str | None = None,
+    instrument_type: str | None = None,
+    start_year: int | None = None,
+    necp_reference: str | None = None,
+    responsible_entity: str | None = None,
+    free_text: str | None = None,
+    max_rows: int = 100,
+    format: OutputFormat = OutputFormat.json,
+) -> None:
+    emit(
+        run(
+            lambda: create_service().list_measures(
+                country,
+                status,
+                sector,
+                instrument_type,
+                start_year,
+                necp_reference,
+                responsible_entity,
+                free_text,
+                max_rows,
+            )
+        ),
+        format,
+    )
+
+
+@measures_app.command("get")
+def measures_get(
+    country: str = typer.Option(...),
+    measure_id: int = typer.Option(...),
+    format: OutputFormat = OutputFormat.json,
+) -> None:
+    emit(run(lambda: create_service().get_measure(country, measure_id)), format)
 
 
 @sql_app.command("capabilities")

@@ -20,6 +20,18 @@ from eu_climate_policy.profile import EEA_CLIMATE_PROFILE
 from eu_climate_policy.sql_validation import SqlGuardrails
 
 HELP_URL = "https://discodata.eea.europa.eu/Help.html"
+PAMS_TABLE = "[GHGPAMS].[latest].[annexIX_flat_view_PaMs_elasticsearch]"
+PAMS_EXANTE_YEARS = (2025, 2030, 2035, 2040, 2045, 2050, 2055)
+PAMS_EXANTE_COLUMNS = {
+    "total": "Total_GHG_emissions_reductions_in_{year}__kt_CO2eq_y_GHG",
+    "esr": "GHG_emissions_reductions_ESR_in_{year}__kt_CO2eq_y_GHG",
+    "eu_ets": "GHG_emissions_reductions_EU_ETS_in_{year}__kt_CO2eq_y_GHG",
+    "lulucf": "GHG_emissions_reductions_LULUCF_in_{year}__kt_CO2eq_y_GHG",
+}
+QUANTIFICATION_CAVEAT = (
+    "Structured ex-ante/ex-post effect values are sparse in PaMs reporting; "
+    "missing values mean 'not reported', not zero impact."
+)
 
 
 class DiscodataClient(Protocol):
@@ -299,6 +311,116 @@ class ClimatePolicyService:
             series=series,
             provenance=provenance,
         )
+
+    def list_measures(
+        self,
+        country: str | None = None,
+        status: str | None = None,
+        sector: str | None = None,
+        instrument_type: str | None = None,
+        start_year: int | None = None,
+        necp_reference: str | None = None,
+        responsible_entity: str | None = None,
+        free_text: str | None = None,
+        max_rows: int = 100,
+    ) -> QueryResult:
+        def quoted(text: str) -> str:
+            return "'" + text.replace("'", "''") + "'"
+
+        def contains(column: str, text: str) -> str:
+            return f"{column} LIKE '%{text.replace(chr(39), chr(39) * 2)}%'"
+
+        filters = []
+        if country:
+            filters.append(f"p.Country = {quoted(country)}")
+        if status:
+            filters.append(f"p.Status_of_implementation = {quoted(status)}")
+        if sector:
+            filters.append(contains("p.Sector_s__affected", sector))
+        if instrument_type:
+            filters.append(contains("p.Type_of_policy_instrument", instrument_type))
+        if start_year is not None:
+            filters.append(f"p.Implementation_period_start = {quoted(str(int(start_year)))}")
+        if necp_reference:
+            filters.append(f"p.PaM_number_in_NECP = {quoted(necp_reference)}")
+        if responsible_entity:
+            filters.append(
+                contains("p.Entities_responsible_for_implementing_the_policy", responsible_entity)
+            )
+        if free_text:
+            filters.append(
+                "("
+                + " OR ".join(
+                    contains(column, free_text)
+                    for column in (
+                        "p.Name_of_policy_or_measure",
+                        "p.Description",
+                        "p.Objective_s_",
+                    )
+                )
+                + ")"
+            )
+        sql = (
+            "SELECT p.Country, p.ID_of_policy_or_measure, p.Name_of_policy_or_measure, "
+            "p.Status_of_implementation, p.Sector_s__affected, p.Type_of_policy_instrument, "
+            "p.Implementation_period_start, p.PaM_number_in_NECP "
+            f"FROM {PAMS_TABLE} AS p"
+        )
+        if filters:
+            sql += " WHERE " + " AND ".join(filters)
+        result = self.query_sql(sql, max_rows=max_rows, page_size=min(max_rows, 500))
+        result.provenance.warnings.append(QUANTIFICATION_CAVEAT)
+        return result
+
+    def get_measure(self, country: str, measure_id: int) -> dict[str, Any]:
+        country_sql = "'" + country.replace("'", "''") + "'"
+        sql = (
+            f"SELECT * FROM {PAMS_TABLE} AS p "
+            f"WHERE p.Country = {country_sql} AND p.ID_of_policy_or_measure = {int(measure_id)}"
+        )
+        result = self.query_sql(sql, max_rows=2, page_size=2)
+        if not result.results:
+            raise NotFoundError(f"No measure {measure_id} for country {country}")
+        row = result.results[0]
+
+        def numeric(value: Any) -> float | None:
+            try:
+                return None if value is None else float(value)
+            except (TypeError, ValueError):
+                return None
+
+        ex_ante: dict[str, dict[int, float]] = {}
+        for scope, pattern in PAMS_EXANTE_COLUMNS.items():
+            values = {
+                year: v
+                for year in PAMS_EXANTE_YEARS
+                if (v := numeric(row.get(pattern.format(year=year)))) is not None
+            }
+            if values:
+                ex_ante[scope] = values
+        ex_post_value = numeric(row.get("Average_expost_emission_reduction__kt_CO2eq_y_GHG"))
+        ex_post = (
+            {
+                "average_kt_co2eq_per_year": ex_post_value,
+                "applies_to_year": row.get("Year_for_which_reduction_applies__expost_GHG"),
+            }
+            if ex_post_value is not None
+            else None
+        )
+        reported = bool(ex_ante) or ex_post is not None
+        quantification: dict[str, Any] = {
+            "quantification_available": reported,
+            "quantification_status": "reported" if reported else "not_reported",
+            "ex_ante_kt_co2eq_per_year": ex_ante,
+            "ex_post": ex_post,
+        }
+        if not reported:
+            quantification["warning"] = QUANTIFICATION_CAVEAT
+        return {
+            "measure": row,
+            "quantification": quantification,
+            "provenance": result.provenance.model_dump(mode="json"),
+        }
 
     def get_sql_capabilities(self) -> dict[str, Any]:
         return {
