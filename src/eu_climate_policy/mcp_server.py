@@ -4,13 +4,13 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from hun_climate_policy.factory import create_service
+from eu_climate_policy.factory import create_service
 
 
 def build_server() -> FastMCP:
     mcp = FastMCP(
-        "hun-climate-policy-mcp",
-        instructions="Read-only, schema-aware access to Hungarian EEA climate data.",
+        "eu-climate-policy-mcp",
+        instructions="Read-only, schema-aware access to European EEA climate data.",
     )
     svc = create_service()
 

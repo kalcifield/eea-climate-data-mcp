@@ -1,6 +1,6 @@
 import pytest
 
-from hun_climate_policy.mcp_server import build_server
+from eu_climate_policy.mcp_server import build_server
 
 
 @pytest.mark.asyncio

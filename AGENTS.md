@@ -2,9 +2,9 @@
 
 ## Project Structure
 
-Python uses the `src` layout under `src/hun_climate_policy/`. Keep typed data contracts
+Python uses the `src` layout under `src/eu_climate_policy/`. Keep typed data contracts
 in `models.py`, workflows in `service.py`, SQL safety in `sql_validation.py`, upstream
-wire behavior in `discodata.py`, and verified Hungary semantics in `profile.py`. Keep
+wire behavior in `discodata.py`, and verified EEA table semantics in `profile.py`. Keep
 `cli.py` and `mcp_server.py` thin; both must call the same `ClimatePolicyService`
 methods. Design findings and live evidence belong in `docs/`.
 
@@ -14,8 +14,8 @@ Use Python 3.11+ and `uv`:
 
 ```bash
 uv sync --extra test
-uv run hun-climate --help
-uv run hun-climate-policy-mcp
+uv run eu-climate --help
+uv run eu-climate-policy-mcp
 uv run pytest -q
 uv run ruff format --check src tests
 uv run ruff check src tests

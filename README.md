@@ -1,16 +1,15 @@
-# hun-climate-policy-mcp
+# eu-climate-policy-mcp
 
-Schema-aware, read-only access to Hungarian climate data published through the
+Schema-aware, read-only access to European climate data published through the
 European Environment Agency's public Discodata service.
 
-This MVP is a **conditional go**. It supports the verified GHG inventory and
-Policies and Measures databases. A current projections database was not visible
-in Discodata metadata during the 2026-07-19 spike, so WEM/WAM comparison is not
-claimed.
+This MVP is a **conditional go**. It supports the verified GHG Inventory and Policies
+and Measures databases. A current projections database was not visible in Discodata
+metadata during the 2026-07-19 spike, so WEM/WAM comparison is not claimed.
 
 > [!IMPORTANT]
-> This is an independent, unofficial client. The EEA and the reporting countries
-> remain the authoritative sources.
+> This is an independent, unofficial client. The EEA and reporting countries remain
+> the authoritative sources.
 
 > [!WARNING]
 > This repository is an experimental proof of concept, not a production service.
@@ -21,71 +20,70 @@ claimed.
 
 ```bash
 uv sync --extra test
-uv run hun-climate databases list
-uv run hun-climate-policy-mcp
+uv run eu-climate databases list
+uv run eu-climate-policy-mcp
 ```
 
-The MCP command uses stdio transport. No credentials are required by the public
-upstream service.
+The MCP command uses stdio transport. No credentials are required.
 
 Claude Code:
 
 ```bash
-claude mcp add --scope user hun-climate -- uvx hun-climate-policy-mcp
+claude mcp add --scope user eu-climate -- uvx eu-climate-policy-mcp
 ```
 
 Codex CLI:
 
 ```bash
-codex mcp add hun-climate -- uvx hun-climate-policy-mcp
+codex mcp add eu-climate -- uvx eu-climate-policy-mcp
 ```
 
 ## CLI examples
 
 ```bash
-uv run hun-climate series emissions --country HU --sector total \
+uv run eu-climate series emissions --country DE --sector total \
   --accounting-scope without_lulucf --start-year 1990
 
-uv run hun-climate tables describe \
+uv run eu-climate tables describe \
   --database GHG_Inventory --version latest --table ghg_value
 
-uv run hun-climate values distinct \
+uv run eu-climate values distinct \
   --database GHGPAMS --version latest \
   --table annexIX_flat_view_PaMs_elasticsearch --column Country
 
-uv run hun-climate sql validate --query-file examples/hungary_inventory_counts.sql
-uv run hun-climate sql run --query-file examples/hungary_inventory_counts.sql \
+uv run eu-climate sql validate --query-file examples/country_inventory_counts.sql
+uv run eu-climate sql run --query-file examples/country_inventory_counts.sql \
   --max-rows 100 --page-size 100
 ```
 
-All execution paths use the same application service and SQL guardrails. Queries
-must be one parsed `SELECT`, fully qualify every table as
-`[database].[version].[table]`, use allowlisted climate databases/versions, and
-remain within the requested bound. DDL, DML, CTEs, `SELECT INTO`, system schemas,
-and unaliased computed columns are rejected.
+All execution paths use the same service and SQL guardrails. Queries must be one
+parsed `SELECT`, fully qualify every table as `[database].[version].[table]`, use
+allowlisted databases and versions, and remain within the requested bound. DDL, DML,
+CTEs, `SELECT INTO`, system schemas, and unaliased computed columns are rejected.
 
 ## Verified source model
 
-| Domain | Database | Hungary filter | Status |
-| --- | --- | --- | --- |
-| National GHG inventory | `GHG_Inventory.latest` | `country_code = 'HU'` (`HUN` also appears in metadata) | `reported_actual` |
-| Policies and Measures | `GHGPAMS.latest` | `Country = 'Hungary'` | `reported_policy_estimate` |
-| GHG projections | Not found in live metadata | — | Outside MVP |
+| Domain | Database | Country field | Live coverage | Status |
+| --- | --- | --- | ---: | --- |
+| National GHG inventory | `GHG_Inventory.latest` | `country_code` | 31 countries plus `EUA` | `reported_actual` |
+| Policies and Measures | `GHGPAMS.latest` | `Country` | 30 countries | `reported_policy_estimate` |
+| GHG projections | Not found in live metadata | — | — | Outside MVP |
 
-`latest` is mutable. Use a concrete version/revision for reproducible analysis
-where the upstream exposes one. The most recent inventory year (2024 at the
-time of writing) is the latest published reporting year, not a real-time or
-current-year emissions figure.
+Country identifiers differ between datasets: inventory uses codes such as `DE`, `FR`,
+and `HU`, while Policies and Measures uses labels such as `Germany`, `France`, and
+`Hungary`. Use metadata discovery or `values distinct` before constructing cross-domain
+queries. `EUA` is an aggregate, not a country.
 
-The `get_emissions_series` tool (CLI: `series emissions`) resolves the
-statistically correct inventory variable — the plain `Total (with/without
-LULUCF)` or sector aggregate, never the `TREND`/`BASE_YEAR_AVG`/
-`PREV_SUBMISSION` variants — and sorts results client-side because upstream
-rejects `ORDER BY` on `ghg_value`. Every query result includes the normalized query
-hash, retrieval time, table references, reporting status, source links, and
-warnings.
+`latest` is mutable. Use a concrete version or revision for reproducible analysis when
+the upstream exposes one. The latest inventory year is a published reporting year, not
+a real-time emissions figure.
 
-Machine-readable output goes to stdout and diagnostics to stderr. Exit codes are:
+The `get_emissions_series` MCP tool and `series emissions` CLI command resolve the
+appropriate inventory variable and sort results client-side because upstream rejects
+`ORDER BY` on some `ghg_value` queries. Every result includes a query hash, retrieval
+time, table references, reporting status, source links, and warnings.
+
+Machine-readable output goes to stdout and diagnostics to stderr. Exit codes:
 
 | Code | Meaning |
 | ---: | --- |
@@ -94,8 +92,9 @@ Machine-readable output goes to stdout and diagnostics to stderr. Exit codes are
 | `3` | Upstream unavailable or invalid response |
 | `4` | Metadata object not found |
 
-See [docs/SPIKE-REVIEW.md](docs/SPIKE-REVIEW.md) for the evidence, capability
-matrix, limitations, and next scope.
+See [docs/SPIKE-REVIEW.md](docs/SPIKE-REVIEW.md) for evidence, limitations, and next
+scope. The original Hungary-focused brief is retained as historical context in
+[docs/SPIKE-hun-climate-policy-mcp.md](docs/SPIKE-hun-climate-policy-mcp.md).
 
 ## Development
 
@@ -107,13 +106,12 @@ uv run mypy src tests
 uv run python scripts/live_smoke.py
 ```
 
-The live smoke suite is intentionally small and performs read-only calls.
+The live smoke suite is intentionally small and read-only.
 
 ## Configuration
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `HUN_CLIMATE_DISCODATA_URL` | `https://discodata.eea.europa.eu` | Upstream service |
-| `HUN_CLIMATE_TIMEOUT_SECONDS` | `30` | Request timeout, capped at 120 seconds |
-| `HUN_CLIMATE_MAX_PAGE_SIZE` | `1000` | Local page-size ceiling |
-
+| `EU_CLIMATE_DISCODATA_URL` | `https://discodata.eea.europa.eu` | Upstream service |
+| `EU_CLIMATE_TIMEOUT_SECONDS` | `30` | Request timeout, capped at 120 seconds |
+| `EU_CLIMATE_MAX_PAGE_SIZE` | `1000` | Local page-size ceiling |

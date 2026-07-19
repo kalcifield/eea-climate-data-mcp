@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, Protocol, cast
 
-from hun_climate_policy.config import Settings
-from hun_climate_policy.discodata import DiscodataProvider
-from hun_climate_policy.models import (
+from eu_climate_policy.config import Settings
+from eu_climate_policy.discodata import DiscodataProvider
+from eu_climate_policy.models import (
     Column,
     EmissionsSeriesResult,
     Provenance,
@@ -15,9 +15,9 @@ from hun_climate_policy.models import (
     ValidationResult,
     ReportingStatus,
 )
-from hun_climate_policy.errors import NotFoundError, UnsafeQueryError
-from hun_climate_policy.profile import HUNGARY_PROFILE
-from hun_climate_policy.sql_validation import SqlGuardrails
+from eu_climate_policy.errors import NotFoundError, UnsafeQueryError
+from eu_climate_policy.profile import EEA_CLIMATE_PROFILE
+from eu_climate_policy.sql_validation import SqlGuardrails
 
 HELP_URL = "https://discodata.eea.europa.eu/Help.html"
 
@@ -105,7 +105,7 @@ class ClimatePolicyService:
         if raw is None:
             raise NotFoundError(f"Unknown table: {database}.{version}.{table}")
         profile_key = f"{database}.latest.{table}"
-        profile = HUNGARY_PROFILE["tables"].get(profile_key, {})
+        profile = EEA_CLIMATE_PROFILE["tables"].get(profile_key, {})
         return TableDescription(
             database=database,
             version=version,
@@ -361,7 +361,7 @@ class ClimatePolicyService:
     @staticmethod
     def _reporting_status(tables: list[str]) -> ReportingStatus:
         statuses = {
-            HUNGARY_PROFILE["tables"]
+            EEA_CLIMATE_PROFILE["tables"]
             .get(".".join([*t.split(".")[:1], "latest", *t.split(".")[2:]]), {})
             .get("status", "unknown")
             for t in tables

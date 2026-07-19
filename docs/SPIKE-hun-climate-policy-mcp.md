@@ -1,5 +1,9 @@
 # SPIKE — hun-climate-policy-mcp
 
+> Historical brief: this Hungary-focused spike led to the first vertical slice. The
+> maintained product is now country-neutral and named `eu-climate-policy-mcp`; current
+> behavior and evidence are documented in `README.md` and `SPIKE-REVIEW.md`.
+
 ## Cél
 
 Vizsgáld meg, hogy az EEA Discodata publikus query API-jára építve létrehozható-e egy megbízható, agent-barát CLI + MCP szolgáltatás magyar klímavédelmi adatok vizsgálatához.

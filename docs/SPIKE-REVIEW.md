@@ -1,11 +1,11 @@
-# SPIKE review — EEA Discodata for Hungarian climate policy
+# SPIKE review — EEA Discodata for European climate policy
 
 Checked: 2026-07-19
 
 ## Decision: CONDITIONAL GO
 
-The public API, machine-readable schema metadata, Hungarian GHG inventory data,
-and Hungarian Policies and Measures records are sufficient for a useful guarded
+The public API, machine-readable schema metadata, European GHG inventory data,
+and national Policies and Measures records are sufficient for a useful guarded
 vertical slice. The service needs no authentication and returns JSON.
 
 The full product is not yet a GO: no dedicated current GHG projections dataset
@@ -22,13 +22,13 @@ allowlist. The MVP therefore makes no WEM/WAM or 2030 target-progress claims.
   newest revision in that major version; explicit `vNrN` revisions also exist.
 - `GHG_Inventory.latest` exposes `ghg_meta`, `ghg_value`, `ghg_variable`, and
   `ghg_unit_conversion`.
-- Live `ghg_meta` returned Hungary as `HU` / `HUN`, submission version
-  `20260315`, submission year `2026`.
+- Live inventory values covered 31 countries plus the `EUA` aggregate. Country codes
+  include `HU`; `HUN` also appears in metadata.
 - `GHGPAMS.latest` exposes the 181-column
-  `annexIX_flat_view_PaMs_elasticsearch`. Its Hungary value is the label
-  `Hungary`, not `HU`.
-- Hungary has current policy records, including implementation status and
-  2030-effect fields, but the sampled 2030 total-effect values were null.
+  `annexIX_flat_view_PaMs_elasticsearch` with 30 country labels. Country identifiers
+  are names such as `Hungary`, not inventory codes such as `HU`.
+- Current policy records include implementation status and 2030-effect fields, but
+  sampled 2030 total-effect values were null.
 - Inventory joins on `ghg_value.variable_uid = ghg_variable.variable_uid`
   executed successfully.
 
@@ -103,8 +103,8 @@ combines reporting domains maps to `derived_by_tool`.
 ## Next MVP scope
 
 Keep this vertical slice until an official projections source is identified.
-Next, record a broader capability fixture, quantify Hungary PaM completeness by
-report and status, add cancellation at the adapter boundary, and pin profile
+Next, record a broader capability fixture, quantify PaM completeness by country,
+report, and status, add cancellation at the adapter boundary, and pin profile
 metadata to explicit revisions. Only then add `compare_scenarios` or
 `assess_target_progress`.
 
@@ -115,4 +115,3 @@ metadata to explicit revisions. Only then add `compare_scenarios` or
 - Governance Regulation: <https://eur-lex.europa.eu/eli/reg/2018/1999/oj>
 - UNFCCC reporting guidance: <https://unfccc.int/ghg-inventories-annex-i-parties/2024>
 - IPCC 2006 Guidelines: <https://www.ipcc-nggip.iges.or.jp/public/2006gl/>
-

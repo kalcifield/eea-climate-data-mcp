@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from hun_climate_policy.service import ClimatePolicyService
+from eu_climate_policy.service import ClimatePolicyService
 
 
 class FakeProvider:
@@ -42,7 +42,7 @@ def test_query_returns_provenance(metadata_fixture: list[dict[str, Any]]) -> Non
     service = ClimatePolicyService(provider=provider)
     result = service.query_sql(
         "SELECT inventory_year, COUNT(*) AS n FROM [GHG_Inventory].[latest].[ghg_value] "
-        "WHERE country_code='HU' GROUP BY inventory_year",
+        "WHERE country_code='DE' GROUP BY inventory_year",
         max_rows=10,
         page_size=5,
     )
@@ -79,7 +79,7 @@ class SeriesFakeProvider(FakeProvider):
 def test_emissions_series_sorts_client_side(metadata_fixture: list[dict[str, Any]]) -> None:
     provider = SeriesFakeProvider(metadata_fixture)
     service = ClimatePolicyService(provider=provider)
-    result = service.get_emissions_series("HU", start_year=1990, end_year=2024)
+    result = service.get_emissions_series("DE", start_year=1990, end_year=2024)
     assert [point["year"] for point in result.series] == [1990, 2000]
     assert result.ordering == "year_ascending_client_side"
     assert result.variable_uid == "uid-total"
@@ -93,7 +93,7 @@ def test_emissions_series_sorts_client_side(metadata_fixture: list[dict[str, Any
 def test_emissions_series_rejects_bad_scope(metadata_fixture: list[dict[str, Any]]) -> None:
     service = ClimatePolicyService(provider=SeriesFakeProvider(metadata_fixture))
     try:
-        service.get_emissions_series("HU", accounting_scope="net")
+        service.get_emissions_series("DE", accounting_scope="net")
     except ValueError as exc:
         assert "accounting_scope" in str(exc)
     else:

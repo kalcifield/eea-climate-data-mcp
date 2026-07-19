@@ -1,16 +1,16 @@
-from hun_climate_policy.config import Settings
-from hun_climate_policy.sql_validation import SqlGuardrails
+from eu_climate_policy.config import Settings
+from eu_climate_policy.sql_validation import SqlGuardrails
 
 
 def guardrails() -> SqlGuardrails:
     return SqlGuardrails(Settings())
 
 
-def test_accepts_and_bounds_hungary_select() -> None:
+def test_accepts_and_bounds_country_select() -> None:
     result = guardrails().validate(
         "SELECT inventory_year, SUM(value) AS total "
         "FROM [GHG_Inventory].[latest].[ghg_value] "
-        "WHERE country_code='HU' GROUP BY inventory_year",
+        "WHERE country_code='DE' GROUP BY inventory_year",
         max_rows=50,
     )
     assert result.valid

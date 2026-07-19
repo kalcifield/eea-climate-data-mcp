@@ -7,8 +7,8 @@ from typing import Any, Callable, TypeVar
 
 import typer
 
-from hun_climate_policy.errors import NotFoundError, UnsafeQueryError, UpstreamError
-from hun_climate_policy.factory import create_service
+from eu_climate_policy.errors import NotFoundError, UnsafeQueryError, UpstreamError
+from eu_climate_policy.factory import create_service
 
 T = TypeVar("T")
 
@@ -18,7 +18,7 @@ class OutputFormat(str, Enum):
     jsonl = "jsonl"
 
 
-app = typer.Typer(help="Read-only Hungarian climate data from EEA Discodata.", no_args_is_help=True)
+app = typer.Typer(help="Read-only European climate data from EEA Discodata.", no_args_is_help=True)
 databases_app = typer.Typer(no_args_is_help=True)
 tables_app = typer.Typer(no_args_is_help=True)
 values_app = typer.Typer(no_args_is_help=True)

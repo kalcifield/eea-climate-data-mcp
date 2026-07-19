@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from hun_climate_policy.service import ClimatePolicyService
+from eu_climate_policy.service import ClimatePolicyService
 
 
 def main() -> None:
@@ -12,7 +12,7 @@ def main() -> None:
     result = service.query_sql(
         "SELECT v.inventory_year, COUNT(*) AS n "
         "FROM [GHG_Inventory].[latest].[ghg_value] AS v "
-        "WHERE v.country_code='HU' GROUP BY v.inventory_year",
+        "WHERE v.country_code='DE' GROUP BY v.inventory_year",
         max_rows=10,
         page_size=5,
     )
@@ -20,11 +20,11 @@ def main() -> None:
     policies = service.query_sql(
         "SELECT TOP 2 Country, ID_of_policy_or_measure, Name_of_policy_or_measure "
         "FROM [GHGPAMS].[latest].[annexIX_flat_view_PaMs_elasticsearch] "
-        "WHERE Country='Hungary'",
+        "WHERE Country='France'",
         max_rows=2,
         page_size=2,
     )
-    assert policies.results and all(row["Country"] == "Hungary" for row in policies.results)
+    assert policies.results and all(row["Country"] == "France" for row in policies.results)
     print("live smoke: ok")
 
 

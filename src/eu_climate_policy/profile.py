@@ -1,10 +1,6 @@
 from typing import Any
 
-HUNGARY_PROFILE: dict[str, Any] = {
-    "country_filters": {
-        "GHG_Inventory": {"column": "country_code", "value": "HU", "country_code_3": "HUN"},
-        "GHGPAMS": {"column": "Country", "value": "Hungary"},
-    },
+EEA_CLIMATE_PROFILE: dict[str, Any] = {
     "tables": {
         "GHG_Inventory.latest.ghg_value": {
             "grain": "country × submission × inventory year × variable",
