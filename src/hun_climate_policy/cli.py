@@ -23,10 +23,12 @@ databases_app = typer.Typer(no_args_is_help=True)
 tables_app = typer.Typer(no_args_is_help=True)
 values_app = typer.Typer(no_args_is_help=True)
 sql_app = typer.Typer(no_args_is_help=True)
+series_app = typer.Typer(no_args_is_help=True)
 app.add_typer(databases_app, name="databases")
 app.add_typer(tables_app, name="tables")
 app.add_typer(values_app, name="values")
 app.add_typer(sql_app, name="sql")
+app.add_typer(series_app, name="series")
 
 
 def run(operation: Callable[[], T]) -> T:
@@ -172,6 +174,26 @@ def sql_run(
         run(
             lambda: svc.query_sql(
                 query, max_rows=max_rows, page=page, page_size=page_size, timeout=timeout
+            )
+        ),
+        format,
+    )
+
+
+@series_app.command("emissions")
+def series_emissions(
+    country: str = typer.Option(...),
+    sector: str = "total",
+    gas: str = "Aggregate GHGs",
+    accounting_scope: str = "without_lulucf",
+    start_year: int | None = None,
+    end_year: int | None = None,
+    format: OutputFormat = OutputFormat.json,
+) -> None:
+    emit(
+        run(
+            lambda: create_service().get_emissions_series(
+                country, sector, gas, accounting_scope, start_year, end_year
             )
         ),
         format,

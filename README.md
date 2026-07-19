@@ -43,6 +43,9 @@ codex mcp add hun-climate -- uvx hun-climate-policy-mcp
 ## CLI examples
 
 ```bash
+uv run hun-climate series emissions --country HU --sector total \
+  --accounting-scope without_lulucf --start-year 1990
+
 uv run hun-climate tables describe \
   --database GHG_Inventory --version latest --table ghg_value
 
@@ -70,7 +73,15 @@ and unaliased computed columns are rejected.
 | GHG projections | Not found in live metadata | — | Outside MVP |
 
 `latest` is mutable. Use a concrete version/revision for reproducible analysis
-where the upstream exposes one. Every query result includes the normalized query
+where the upstream exposes one. The most recent inventory year (2024 at the
+time of writing) is the latest published reporting year, not a real-time or
+current-year emissions figure.
+
+The `get_emissions_series` tool (CLI: `series emissions`) resolves the
+statistically correct inventory variable — the plain `Total (with/without
+LULUCF)` or sector aggregate, never the `TREND`/`BASE_YEAR_AVG`/
+`PREV_SUBMISSION` variants — and sorts results client-side because upstream
+rejects `ORDER BY` on `ghg_value`. Every query result includes the normalized query
 hash, retrieval time, table references, reporting status, source links, and
 warnings.
 

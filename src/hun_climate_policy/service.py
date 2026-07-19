@@ -7,6 +7,7 @@ from hun_climate_policy.config import Settings
 from hun_climate_policy.discodata import DiscodataProvider
 from hun_climate_policy.models import (
     Column,
+    EmissionsSeriesResult,
     Provenance,
     QueryResult,
     SqlExplanation,
@@ -199,6 +200,105 @@ class ClimatePolicyService:
             raise NotFoundError(f"Unknown column: {column}")
         sql = f"SELECT DISTINCT TOP {max_rows} [{column}] FROM [{database}].[{version}].[{table}]"
         return self.query_sql(sql, max_rows=max_rows, page_size=max_rows)
+
+    def get_emissions_series(
+        self,
+        country: str,
+        sector: str = "total",
+        gas: str = "Aggregate GHGs",
+        accounting_scope: str = "without_lulucf",
+        start_year: int | None = None,
+        end_year: int | None = None,
+    ) -> EmissionsSeriesResult:
+        scope_parameter = {
+            "with_lulucf": "Total (with LULUCF)",
+            "without_lulucf": "Total (without LULUCF)",
+        }.get(accounting_scope)
+        if scope_parameter is None:
+            raise ValueError("accounting_scope must be 'with_lulucf' or 'without_lulucf'")
+        sector_key = sector.strip().lower()
+        if sector_key != "total" and sector_key not in {"1", "2", "3", "4", "5", "6"}:
+            raise ValueError("sector must be 'total' or an IPCC sector number '1'..'6'")
+
+        def quoted(text: str) -> str:
+            return "'" + text.replace("'", "''") + "'"
+
+        parameter = scope_parameter if sector_key == "total" else "no parameter"
+        sector_number = "Sectors/Totals" if sector_key == "total" else sector_key
+        variable_sql = (
+            "SELECT r.variable_uid, r.variable_name, r.unit, r.classification, r.navigation, "
+            "r.is_template, r.is_country_specific "
+            "FROM [GHG_Inventory].[latest].[ghg_variable] AS r "
+            f"WHERE r.sector_number = {quoted(sector_number)} AND r.gas = {quoted(gas)} "
+            f"AND r.measure = 'Emissions' AND r.parameter = {quoted(parameter)}"
+        )
+        candidates = self.query_sql(variable_sql, max_rows=50, page_size=50).results
+        if sector_key != "total":
+            # plain sector aggregate only: skip memo items, templates, and HWP approach variants
+            candidates = [
+                c
+                for c in candidates
+                if c.get("classification") == "no classification"
+                and not c.get("is_template")
+                and not c.get("is_country_specific")
+                and str(c.get("navigation", "")).startswith(f"{sector_key}.")
+            ]
+        preferred = [c for c in candidates if c.get("unit") == "kt CO₂ equivalent"] or candidates
+        if not preferred:
+            raise NotFoundError(
+                f"No inventory variable matches sector={sector}, gas={gas}, "
+                f"accounting_scope={accounting_scope}"
+            )
+        if len(preferred) > 1:
+            names = "; ".join(str(c.get("variable_name")) for c in preferred)
+            raise NotFoundError(
+                f"Ambiguous inventory variable match, refine via query_sql: {names}"
+            )
+        variable = preferred[0]
+
+        filters = [
+            f"v.country_code = {quoted(country)}",
+            f"v.variable_uid = {quoted(str(variable['variable_uid']))}",
+        ]
+        if start_year is not None:
+            filters.append(f"v.inventory_year >= {int(start_year)}")
+        if end_year is not None:
+            filters.append(f"v.inventory_year <= {int(end_year)}")
+        # no ORDER BY on purpose: upstream rejects it on ghg_value (error 10002); sorted locally
+        value_sql = (
+            "SELECT v.inventory_year, v.value FROM [GHG_Inventory].[latest].[ghg_value] AS v "
+            "WHERE " + " AND ".join(filters)
+        )
+        result = self.query_sql(value_sql, max_rows=500, page_size=500)
+        series = sorted(
+            (
+                {"year": int(r["inventory_year"]), "value": float(r["value"])}
+                for r in result.results
+                if r.get("value") is not None
+            ),
+            key=lambda point: point["year"],
+        )
+        provenance = result.provenance
+        provenance.warnings = [
+            *provenance.warnings,
+            "Upstream ordering was not used; results were sorted client-side.",
+        ]
+        if sector_key != "total":
+            provenance.warnings.append(
+                "accounting_scope applies only to sector='total'; "
+                "sector series are the reported sector aggregates."
+            )
+        return EmissionsSeriesResult(
+            country=country,
+            sector=sector,
+            gas=gas,
+            accounting_scope=accounting_scope,
+            unit=variable.get("unit"),
+            variable_uid=str(variable["variable_uid"]),
+            variable_name=variable.get("variable_name"),
+            series=series,
+            provenance=provenance,
+        )
 
     def get_sql_capabilities(self) -> dict[str, Any]:
         return {

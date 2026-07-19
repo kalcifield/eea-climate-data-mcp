@@ -52,6 +52,54 @@ def test_query_returns_provenance(metadata_fixture: list[dict[str, Any]]) -> Non
     assert "TOP 10" in provider.calls[0][0]
 
 
+class SeriesFakeProvider(FakeProvider):
+    def query(
+        self, sql: str, page: int, page_size: int, timeout: float | None = None
+    ) -> list[dict[str, Any]]:
+        self.calls.append((sql, page, page_size, timeout))
+        if "ghg_variable" in sql:
+            return [
+                {
+                    "variable_uid": "uid-total",
+                    "variable_name": "[Sectors/Totals][...][Total (without LULUCF)]",
+                    "unit": "kt CO₂ equivalent",
+                    "classification": "no classification",
+                    "navigation": "Sectors/Totals",
+                    "is_template": False,
+                    "is_country_specific": False,
+                }
+            ]
+        return [
+            {"inventory_year": 2000, "value": 75.0},
+            {"inventory_year": 1990, "value": 94.0},
+            {"inventory_year": 1995, "value": None},
+        ]
+
+
+def test_emissions_series_sorts_client_side(metadata_fixture: list[dict[str, Any]]) -> None:
+    provider = SeriesFakeProvider(metadata_fixture)
+    service = ClimatePolicyService(provider=provider)
+    result = service.get_emissions_series("HU", start_year=1990, end_year=2024)
+    assert [point["year"] for point in result.series] == [1990, 2000]
+    assert result.ordering == "year_ascending_client_side"
+    assert result.variable_uid == "uid-total"
+    assert any("sorted client-side" in w for w in result.provenance.warnings)
+    assert all("ORDER BY" not in sql for sql, *_ in provider.calls)
+    value_sql = provider.calls[-1][0]
+    assert "uid-total" in value_sql
+    assert "inventory_year >= 1990" in value_sql
+
+
+def test_emissions_series_rejects_bad_scope(metadata_fixture: list[dict[str, Any]]) -> None:
+    service = ClimatePolicyService(provider=SeriesFakeProvider(metadata_fixture))
+    try:
+        service.get_emissions_series("HU", accounting_scope="net")
+    except ValueError as exc:
+        assert "accounting_scope" in str(exc)
+    else:
+        raise AssertionError("expected ValueError")
+
+
 def test_distinct_validates_column(metadata_fixture: list[dict[str, Any]]) -> None:
     service = ClimatePolicyService(provider=FakeProvider(metadata_fixture))
     try:

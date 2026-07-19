@@ -53,6 +53,28 @@ def build_server() -> FastMCP:
         return result.model_dump(mode="json")
 
     @mcp.tool()
+    def get_emissions_series(
+        country: str,
+        sector: str = "total",
+        gas: str = "Aggregate GHGs",
+        accounting_scope: str = "without_lulucf",
+        start_year: int | None = None,
+        end_year: int | None = None,
+    ) -> dict[str, Any]:
+        """Curated national GHG inventory time series with the statistically correct variable.
+
+        country: ISO-style Discodata country code, e.g. 'HU', 'AT', 'EUA'.
+        sector: 'total' or an IPCC sector number '1'..'6' (1 Energy, 2 IPPU,
+        3 Agriculture, 4 LULUCF, 5 Waste, 6 Other).
+        accounting_scope: 'with_lulucf' or 'without_lulucf' (totals only).
+        Avoids TREND/BASE_YEAR_AVG/PREV_SUBMISSION variants; sorted client-side by year.
+        """
+        result = svc.get_emissions_series(
+            country, sector, gas, accounting_scope, start_year, end_year
+        )
+        return result.model_dump(mode="json")
+
+    @mcp.tool()
     def get_sql_capabilities() -> dict[str, Any]:
         """Return the documented and live-tested Discodata SQL capability matrix."""
         return svc.get_sql_capabilities()

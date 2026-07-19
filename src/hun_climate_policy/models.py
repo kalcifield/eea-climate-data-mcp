@@ -74,6 +74,19 @@ class Provenance(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class EmissionsSeriesResult(BaseModel):
+    country: str
+    sector: str
+    gas: str
+    accounting_scope: str
+    unit: str | None = None
+    variable_uid: str
+    variable_name: str | None = None
+    series: list[dict[str, Any]]
+    ordering: str = "year_ascending_client_side"
+    provenance: Provenance
+
+
 class QueryResult(BaseModel):
     results: list[dict[str, Any]]
     page: int

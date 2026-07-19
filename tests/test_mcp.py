@@ -14,6 +14,7 @@ async def test_server_exposes_discovery_sql_and_provenance_tools() -> None:
         "describe_table",
         "preview_rows",
         "list_distinct_values",
+        "get_emissions_series",
         "get_sql_capabilities",
         "validate_sql",
         "explain_sql",
