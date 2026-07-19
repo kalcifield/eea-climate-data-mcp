@@ -1,0 +1,71 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hun-climate-policy-mcp"
+version = "0.1.0"
+description = "Schema-aware, read-only CLI and MCP access to Hungarian climate data in EEA Discodata"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+keywords = ["climate", "eea", "hungary", "mcp", "greenhouse-gas"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Scientific/Engineering :: Atmospheric Science",
+]
+dependencies = [
+  "httpx[socks]>=0.27,<1",
+  "mcp>=1.2,<2",
+  "platformdirs>=4.2,<5",
+  "pydantic>=2.7,<3",
+  "sqlglot>=25,<29",
+  "typer>=0.12,<1",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<9", "pytest-asyncio>=0.25,<2", "respx>=0.21,<1"]
+
+[project.scripts]
+hun-climate = "hun_climate_policy.cli:app"
+hun-climate-policy-mcp = "hun_climate_policy.mcp_server:main"
+
+[project.urls]
+Repository = "https://github.com/kalcifield/hun-climate-policy-mcp"
+Issues = "https://github.com/kalcifield/hun-climate-policy-mcp/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hun_climate_policy"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+  "/scripts",
+  "/examples",
+  "/docs",
+  "/README.md",
+  "/TODO.md",
+  "/LICENSE",
+  "/AGENTS.md",
+  "/pyproject.toml",
+  "/uv.lock",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+strict = true
+
+[dependency-groups]
+dev = ["mypy>=1.15,<2", "ruff>=0.11,<1"]
