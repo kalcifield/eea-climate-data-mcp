@@ -2,6 +2,12 @@
 
 [![eu-climate — Europe’s climate reports, made queryable](assets/eu-climate-hero.png)](assets/eu-climate-hero.png)
 
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![MCP](https://img.shields.io/badge/MCP-stdio-6f42c1)](https://modelcontextprotocol.io/)
+[![Status: Alpha](https://img.shields.io/badge/status-alpha-orange)](TODO.md)
+[![Data: EEA Discodata](https://img.shields.io/badge/data-EEA%20Discodata-0097a7)](https://discodata.eea.europa.eu/)
+
 Schema-aware, read-only access to European climate data published through the public
 Discodata service of the European Environment Agency (EEA).
 
