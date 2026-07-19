@@ -2,6 +2,7 @@
 
 [![eu-climate — Europe’s climate reports, made queryable](assets/eu-climate-hero.png)](assets/eu-climate-hero.png)
 
+[![PyPI](https://img.shields.io/pypi/v/eea-climate-data-mcp)](https://pypi.org/project/eea-climate-data-mcp/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-stdio-6f42c1)](https://modelcontextprotocol.io/)
@@ -25,6 +26,15 @@ metadata during the 2026-07-19 spike, so WEM/WAM comparison is not claimed.
 > See [`TODO.md`](TODO.md).
 
 ## Install
+
+Install the CLI and MCP server as isolated commands:
+
+```bash
+uv tool install eea-climate-data-mcp
+eu-climate --help
+```
+
+Development checkout:
 
 ```bash
 uv sync --extra test
@@ -137,6 +147,18 @@ uv run python scripts/live_smoke.py
 ```
 
 The live smoke suite is intentionally small and read-only.
+
+## Release
+
+Maintainers release from a clean, synchronized `main` branch:
+
+```bash
+scripts/release patch
+```
+
+The helper bumps the version, commits and pushes it, then creates a GitHub Release.
+The release workflow builds the distributions and publishes them to PyPI through
+trusted publishing.
 
 ## Configuration
 

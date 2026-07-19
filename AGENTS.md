@@ -22,6 +22,9 @@ uv run ruff check src tests
 uv run mypy src tests
 ```
 
+Release with `scripts/release {patch|minor|major}`. GitHub Actions publishes to PyPI
+through the `pypi` environment after the GitHub Release is created.
+
 Run `uv run python scripts/live_smoke.py` only when explicitly validating the public
 service. Keep live probes small, bounded, read-only, and separate from routine tests.
 

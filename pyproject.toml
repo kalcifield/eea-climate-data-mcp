@@ -35,6 +35,7 @@ eu-climate = "eea_climate_data.cli:app"
 eea-climate-data-mcp = "eea_climate_data.mcp_server:main"
 
 [project.urls]
+Documentation = "https://github.com/kalcifield/eea-climate-data-mcp#readme"
 Repository = "https://github.com/kalcifield/eea-climate-data-mcp"
 Issues = "https://github.com/kalcifield/eea-climate-data-mcp/issues"
 
@@ -52,4 +53,4 @@ line-length = 100
 strict = true
 
 [dependency-groups]
-dev = ["mypy>=1.15,<2", "ruff>=0.11,<1"]
+dev = ["mypy>=1.15,<2", "prek>=0.4.10", "ruff>=0.11,<1"]
