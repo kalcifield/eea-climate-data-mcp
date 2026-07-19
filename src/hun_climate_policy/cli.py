@@ -161,10 +161,8 @@ def sql_run(
     page: int = 1,
     page_size: int = 100,
     timeout: float = 30.0,
-    no_cache: bool = False,
     explain: bool = False,
 ) -> None:
-    del no_cache  # Query results are deliberately not cached in the MVP.
     query = read_query(query_file)
     svc = create_service()
     if explain:
