@@ -1,5 +1,7 @@
 # eu-climate-policy-mcp
 
+[![eu-climate — Europe’s climate reports, made queryable](assets/eu-climate-hero.png)](assets/eu-climate-hero.png)
+
 Schema-aware, read-only access to European climate data published through the
 European Environment Agency's public Discodata service.
 
@@ -108,6 +110,11 @@ Machine-readable output goes to stdout and diagnostics to stderr. Exit codes:
 | `2` | Invalid or unsafe query/argument |
 | `3` | Upstream unavailable or invalid response |
 | `4` | Metadata object not found |
+
+[docs/RECIPES.md](docs/RECIPES.md) contains six reproducible investigation
+recipes (trend, sectoral change, road-transport contribution, PaMs reporting
+completeness, sector quantification gaps, trend × measure stock) with exact
+commands, formulas, query hashes, and caveats.
 
 See [docs/SPIKE-REVIEW.md](docs/SPIKE-REVIEW.md) for evidence, limitations, and next
 scope. The original Hungary-focused brief is retained as historical context in
