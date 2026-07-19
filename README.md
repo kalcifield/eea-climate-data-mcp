@@ -56,6 +56,13 @@ Codex CLI:
 codex mcp add eu-climate -- uvx eea-climate-data-mcp
 ```
 
+One-click editor installation:
+
+| Client | Install |
+|---|---|
+| VS Code | [![Install on VS Code](https://img.shields.io/badge/Install_on-VS-Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=eu-climate&config=%7B%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22eea-climate-data-mcp%22%5D%7D) |
+| Cursor | [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=eu-climate&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJlZWEtY2xpbWF0ZS1kYXRhLW1jcCJdfQ==) |
+
 ## CLI examples
 
 ```bash
