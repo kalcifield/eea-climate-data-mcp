@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from sqlglot import exp, parse
 from sqlglot.errors import ParseError
 
-from eu_climate_policy.config import Settings
-from eu_climate_policy.models import SqlExplanation, ValidationResult
+from eea_climate_data.config import Settings
+from eea_climate_data.models import SqlExplanation, ValidationResult
 
 
 @dataclass(frozen=True)

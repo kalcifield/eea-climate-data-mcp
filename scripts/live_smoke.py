@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from eu_climate_policy.service import ClimatePolicyService
+from eea_climate_data.service import ClimatePolicyService
 
 
 def main() -> None:

@@ -4,8 +4,8 @@ import httpx
 import pytest
 import respx
 
-from eu_climate_policy.config import Settings
-from eu_climate_policy.discodata import DiscodataError, DiscodataProvider
+from eea_climate_data.config import Settings
+from eea_climate_data.discodata import DiscodataError, DiscodataProvider
 
 
 @respx.mock

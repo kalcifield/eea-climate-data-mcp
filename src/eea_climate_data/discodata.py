@@ -6,9 +6,9 @@ from typing import Any, cast
 
 import httpx
 
-from eu_climate_policy.cache import JsonCache
-from eu_climate_policy.config import Settings
-from eu_climate_policy.errors import UpstreamError
+from eea_climate_data.cache import JsonCache
+from eea_climate_data.config import Settings
+from eea_climate_data.errors import UpstreamError
 
 
 class DiscodataError(UpstreamError):

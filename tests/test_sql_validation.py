@@ -1,5 +1,5 @@
-from eu_climate_policy.config import Settings
-from eu_climate_policy.sql_validation import SqlGuardrails
+from eea_climate_data.config import Settings
+from eea_climate_data.sql_validation import SqlGuardrails
 
 
 def guardrails() -> SqlGuardrails:

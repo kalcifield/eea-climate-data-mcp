@@ -7,8 +7,8 @@ from typing import Any, Callable, TypeVar
 
 import typer
 
-from eu_climate_policy.errors import NotFoundError, UnsafeQueryError, UpstreamError
-from eu_climate_policy.factory import create_service
+from eea_climate_data.errors import NotFoundError, UnsafeQueryError, UpstreamError
+from eea_climate_data.factory import create_service
 
 T = TypeVar("T")
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from eu_climate_policy.service import ClimatePolicyService
+from eea_climate_data.service import ClimatePolicyService
 
 
 class FakeProvider:

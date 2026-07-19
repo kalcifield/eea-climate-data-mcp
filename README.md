@@ -1,9 +1,9 @@
-# eu-climate-policy-mcp
+# eea-climate-data-mcp
 
 [![eu-climate — Europe’s climate reports, made queryable](assets/eu-climate-hero.png)](assets/eu-climate-hero.png)
 
-Schema-aware, read-only access to European climate data published through the
-European Environment Agency's public Discodata service.
+Schema-aware, read-only access to European climate data published through the public
+Discodata service of the European Environment Agency (EEA).
 
 This MVP is a **conditional go**. It supports the verified GHG Inventory and Policies
 and Measures databases. A current projections database was not visible in Discodata
@@ -23,7 +23,7 @@ metadata during the 2026-07-19 spike, so WEM/WAM comparison is not claimed.
 ```bash
 uv sync --extra test
 uv run eu-climate databases list
-uv run eu-climate-policy-mcp
+uv run eea-climate-data-mcp
 ```
 
 The MCP command uses stdio transport. No credentials are required.
@@ -31,13 +31,13 @@ The MCP command uses stdio transport. No credentials are required.
 Claude Code:
 
 ```bash
-claude mcp add --scope user eu-climate -- uvx eu-climate-policy-mcp
+claude mcp add --scope user eu-climate -- uvx eea-climate-data-mcp
 ```
 
 Codex CLI:
 
 ```bash
-codex mcp add eu-climate -- uvx eu-climate-policy-mcp
+codex mcp add eu-climate -- uvx eea-climate-data-mcp
 ```
 
 ## CLI examples
@@ -136,6 +136,6 @@ The live smoke suite is intentionally small and read-only.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `EU_CLIMATE_DISCODATA_URL` | `https://discodata.eea.europa.eu` | Upstream service |
-| `EU_CLIMATE_TIMEOUT_SECONDS` | `30` | Request timeout, capped at 120 seconds |
-| `EU_CLIMATE_MAX_PAGE_SIZE` | `1000` | Local page-size ceiling |
+| `EEA_CLIMATE_DISCODATA_URL` | `https://discodata.eea.europa.eu` | Upstream service |
+| `EEA_CLIMATE_TIMEOUT_SECONDS` | `30` | Request timeout, capped at 120 seconds |
+| `EEA_CLIMATE_MAX_PAGE_SIZE` | `1000` | Local page-size ceiling |

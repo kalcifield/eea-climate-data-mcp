@@ -10,7 +10,7 @@ from platformdirs import user_cache_path
 
 class JsonCache:
     def __init__(self, root: Path | None = None) -> None:
-        self.root = root or user_cache_path("eu-climate-policy")
+        self.root = root or user_cache_path("eea-climate-data")
 
     def get(self, key: str, ttl_seconds: int) -> Any | None:
         path = self.root / f"{key}.json"

@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "eu-climate-policy-mcp"
+name = "eea-climate-data-mcp"
 version = "0.1.0"
 description = "Schema-aware, read-only CLI and MCP access to European climate data in EEA Discodata"
 readme = "README.md"
@@ -31,15 +31,15 @@ dependencies = [
 test = ["pytest>=8,<9", "pytest-asyncio>=0.25,<2", "respx>=0.21,<1"]
 
 [project.scripts]
-eu-climate = "eu_climate_policy.cli:app"
-eu-climate-policy-mcp = "eu_climate_policy.mcp_server:main"
+eu-climate = "eea_climate_data.cli:app"
+eea-climate-data-mcp = "eea_climate_data.mcp_server:main"
 
 [project.urls]
-Repository = "https://github.com/kalcifield/hun-climate-policy-mcp"
-Issues = "https://github.com/kalcifield/hun-climate-policy-mcp/issues"
+Repository = "https://github.com/kalcifield/eea-climate-data-mcp"
+Issues = "https://github.com/kalcifield/eea-climate-data-mcp/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/eu_climate_policy"]
+packages = ["src/eea_climate_data"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

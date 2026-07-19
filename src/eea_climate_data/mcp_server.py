@@ -4,12 +4,12 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from eu_climate_policy.factory import create_service
+from eea_climate_data.factory import create_service
 
 
 def build_server() -> FastMCP:
     mcp = FastMCP(
-        "eu-climate-policy-mcp",
+        "eea-climate-data-mcp",
         instructions="Read-only, schema-aware access to European EEA climate data.",
     )
     svc = create_service()

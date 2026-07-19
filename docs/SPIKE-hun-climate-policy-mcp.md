@@ -1,7 +1,7 @@
 # SPIKE — hun-climate-policy-mcp
 
 > Historical brief: this Hungary-focused spike led to the first vertical slice. The
-> maintained product is now country-neutral and named `eu-climate-policy-mcp`; current
+> maintained product is now country-neutral and named `eea-climate-data-mcp`; current
 > behavior and evidence are documented in `README.md` and `SPIKE-REVIEW.md`.
 
 ## Cél

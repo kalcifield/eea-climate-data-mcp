@@ -4,9 +4,9 @@ import re
 from datetime import UTC, datetime
 from typing import Any, Protocol, cast
 
-from eu_climate_policy.config import Settings
-from eu_climate_policy.discodata import DiscodataProvider
-from eu_climate_policy.models import (
+from eea_climate_data.config import Settings
+from eea_climate_data.discodata import DiscodataProvider
+from eea_climate_data.models import (
     Column,
     EmissionsSeriesResult,
     Provenance,
@@ -16,9 +16,9 @@ from eu_climate_policy.models import (
     ValidationResult,
     ReportingStatus,
 )
-from eu_climate_policy.errors import NotFoundError, UnsafeQueryError
-from eu_climate_policy.profile import EEA_CLIMATE_PROFILE
-from eu_climate_policy.sql_validation import SqlGuardrails
+from eea_climate_data.errors import NotFoundError, UnsafeQueryError
+from eea_climate_data.profile import EEA_CLIMATE_PROFILE
+from eea_climate_data.sql_validation import SqlGuardrails
 
 HELP_URL = "https://discodata.eea.europa.eu/Help.html"
 PAMS_TABLE = "[GHGPAMS].[latest].[annexIX_flat_view_PaMs_elasticsearch]"
